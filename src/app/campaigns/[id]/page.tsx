@@ -207,14 +207,14 @@ export default function CampaignEditor() {
                 placeholder="Name this campaign"
                 className="name-input w-full bg-transparent text-4xl font-medium tracking-[-0.025em] text-ink outline-none sm:text-[44px]"
                 value={campaign.name}
-                disabled={locked}
+                // The name never goes into an email, so it stays editable even mid-run.
                 // A fresh campaign's default name gets selected, so typing replaces it.
                 onFocus={(e) => { if (campaign.name === "Untitled campaign") e.target.select(); }}
                 onChange={(e) => setCampaign({ ...campaign, name: e.target.value })}
                 onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
                 onBlur={(e) => saveCampaign({ name: e.target.value.trim() || "Untitled campaign" })}
               />
-              {!locked && <span aria-hidden className="text-dim transition-colors group-hover:text-ink"><Pencil size={20} /></span>}
+              <span aria-hidden className="text-dim transition-colors group-hover:text-ink"><Pencil size={20} /></span>
             </div>
           </label>
           <CampaignPill look={look} large />

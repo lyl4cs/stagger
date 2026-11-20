@@ -397,7 +397,7 @@ export default function CampaignEditor() {
 
         {/* STEP 4: Schedule */}
         <Card>
-          <StepHeader n={4} title="Schedule" sub="Pick a start. Outreach paces the rest." />
+          <StepHeader n={4} title="Schedule" sub="Pick a start. Stagger paces the rest." />
           {locked || (look === "done" && toSend.length === 0) ? (
             <div className="flex flex-wrap items-center gap-6">
               <Ring value={sentCount} total={active.length} size={88} done={look === "done"} />

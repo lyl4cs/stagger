@@ -31,7 +31,7 @@ function SignIn() {
           <Posty mood="sending" width={92} ink="#141414" />
         </div>
         <div className="flex flex-col gap-3">
-          <h1 className="m-0 text-[40px] font-semibold tracking-[-0.03em]">Outreach</h1>
+          <h1 className="m-0 text-[40px] font-semibold tracking-[-0.03em]">Stagger</h1>
           <p className="m-0 text-lg leading-[1.45] text-muted">One email, personalized for everyone, sent from your Gmail.</p>
         </div>
         <button onClick={signInWithGoogle} className="btn-primary !h-14 w-full">

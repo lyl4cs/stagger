@@ -5,11 +5,11 @@
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
-select cron.unschedule('outreach-send-due')
-where exists (select 1 from cron.job where jobname = 'outreach-send-due');
+select cron.unschedule('stagger-send-due')
+where exists (select 1 from cron.job where jobname = 'stagger-send-due');
 
 select cron.schedule(
-  'outreach-send-due',
+  'stagger-send-due',
   '* * * * *',
   $$
   select net.http_post(

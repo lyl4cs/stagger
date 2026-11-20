@@ -5,7 +5,7 @@ import "./globals.css";
 
 
 export const metadata: Metadata = {
-  title: "Outreach",
+  title: "Stagger",
   description: "Personalized, scheduled email from your own Gmail",
 };
 

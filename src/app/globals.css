@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Outreach design tokens (from the design file). */
+/* Stagger design tokens (from the design file). */
 :root {
   --bg: #0e0e0e;
   --surface: #141414;

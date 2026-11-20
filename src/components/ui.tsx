@@ -14,7 +14,7 @@ export function Header({ email }: { email?: string }) {
       <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-4 px-6 py-[18px] sm:px-10">
         <Link href="/campaigns" className="flex items-center gap-3 no-underline">
           <Posty width={36} />
-          <span className="text-xl font-semibold tracking-[-0.01em]">Outreach</span>
+          <span className="text-xl font-semibold tracking-[-0.01em]">Stagger</span>
         </Link>
         {email && (
           <div className="flex items-center gap-3">

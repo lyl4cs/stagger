@@ -1,4 +1,4 @@
-# Outreach
+# Stagger
 
 Paste a contact list, write one email, and schedule a personal copy to each person from your own Gmail. Sends are spaced a few minutes apart, every row is tracked, and nobody gets emailed twice.
 

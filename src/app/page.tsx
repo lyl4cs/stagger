@@ -12,8 +12,9 @@ function SignIn() {
   const error = useSearchParams().get("error");
 
   useEffect(() => {
+    if (error) return; // stay here so the error is visible
     supabaseBrowser().auth.getUser().then(({ data }) => { if (data.user) router.replace("/campaigns"); });
-  }, [router]);
+  }, [router, error]);
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-12">
@@ -43,7 +44,13 @@ function SignIn() {
           </svg>
           Sign in with Google
         </button>
-        {error && <p className="m-0 text-sm text-coral-ink">Sign-in didn&apos;t finish. Try again.</p>}
+        {error && (
+          <p className="m-0 text-sm text-coral-ink">
+            {error === "token_save" ? "Signed in, but couldn't save Gmail access. Try again in a minute."
+              : error === "no_refresh_token" ? "Google didn't grant offline access. Sign in again and approve every permission."
+              : "Sign-in didn't finish. Try again."}
+          </p>
+        )}
         <div className="flex items-center gap-2.5 text-sm text-muted">
           <Lock size={16} />
           <span>Sends as you and spots replies. Never reads what anyone wrote.</span>

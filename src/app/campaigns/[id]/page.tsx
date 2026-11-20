@@ -15,7 +15,7 @@ import {
 import { TemplateEditor } from "@/components/TemplateEditor";
 import { EmailPreview } from "@/components/EmailPreview";
 import { Posty } from "@/components/Posty";
-import { ChevL, ChevR, Clip, X, Minus, Plus, Alert, Check, ArrowRight } from "@/components/icons";
+import { ChevL, ChevR, Clip, X, Minus, Plus, Alert, Check, ArrowRight, Pencil } from "@/components/icons";
 
 const COLLAPSED_ROWS = 8;
 
@@ -201,14 +201,21 @@ export default function CampaignEditor() {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-4">
           <label className="flex flex-[1_1_420px] flex-col gap-2">
             <span className="label">Campaign name</span>
-            <input
-              aria-label="Campaign name"
-              className="w-full border-0 bg-transparent p-0 text-4xl font-medium tracking-[-0.025em] text-ink outline-none sm:text-[44px]"
-              value={campaign.name}
-              disabled={locked}
-              onChange={(e) => setCampaign({ ...campaign, name: e.target.value })}
-              onBlur={(e) => saveCampaign({ name: e.target.value.trim() || "Untitled campaign" })}
-            />
+            <div className="group flex items-center gap-3">
+              <input
+                aria-label="Campaign name"
+                placeholder="Name this campaign"
+                className="name-input w-full bg-transparent text-4xl font-medium tracking-[-0.025em] text-ink outline-none sm:text-[44px]"
+                value={campaign.name}
+                disabled={locked}
+                // A fresh campaign's default name gets selected, so typing replaces it.
+                onFocus={(e) => { if (campaign.name === "Untitled campaign") e.target.select(); }}
+                onChange={(e) => setCampaign({ ...campaign, name: e.target.value })}
+                onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                onBlur={(e) => saveCampaign({ name: e.target.value.trim() || "Untitled campaign" })}
+              />
+              {!locked && <span aria-hidden className="text-dim transition-colors group-hover:text-ink"><Pencil size={20} /></span>}
+            </div>
           </label>
           <CampaignPill look={look} large />
         </div>

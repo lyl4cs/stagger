@@ -185,3 +185,9 @@ a:hover { color: var(--mint); }
 .hl-input { position: absolute; inset: 0; height: 100%; resize: none; overflow: hidden; border: 0; outline: none; background: transparent; color: transparent; caret-color: var(--ink); }
 .hl-input::placeholder { color: var(--dim); }
 .hl-input:disabled { cursor: not-allowed; }
+
+/* Campaign name: looks like a heading, but shows it's editable on hover/focus */
+.name-input { border: 0; border-bottom: 2px dashed transparent; padding: 0 0 4px; transition: border-color 0.12s ease; }
+.name-input:hover:not(:disabled) { border-bottom-color: #3a3a3a; }
+.name-input:focus { border-bottom-color: var(--mint); }
+.name-input::placeholder { color: #4a4a4a; }

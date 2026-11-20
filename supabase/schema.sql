@@ -93,6 +93,7 @@ as $$
   returning r.*;
 $$;
 revoke execute on function public.claim_due_recipients(int) from public, anon, authenticated;
+grant execute on function public.claim_due_recipients(int) to service_role;
 
 -- Private bucket for resume attachments. Files live under <user id>/..., and each
 -- user can only touch their own folder.
@@ -141,3 +142,4 @@ as $$
   where id = rid and status = 'sent' and sent_at < now() - interval '20 seconds';
 $$;
 revoke execute on function public.record_open(uuid) from public, anon, authenticated;
+grant execute on function public.record_open(uuid) to service_role;

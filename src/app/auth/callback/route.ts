@@ -14,13 +14,19 @@ export async function GET(req: NextRequest) {
   if (error || !data.session) return NextResponse.redirect(new URL("/?error=auth", url.origin));
 
   const { session } = data;
-  if (session.provider_refresh_token) {
-    await supabaseAdmin().from("gmail_tokens").upsert({
-      user_id: session.user.id,
-      email: session.user.email!,
-      refresh_token: session.provider_refresh_token,
-      updated_at: new Date().toISOString(),
-    });
+  if (!session.provider_refresh_token) {
+    // Google only returns a refresh token when the consent screen is shown; without one we can't send later.
+    return NextResponse.redirect(new URL("/?error=no_refresh_token", url.origin));
+  }
+  const { error: saveError } = await supabaseAdmin().from("gmail_tokens").upsert({
+    user_id: session.user.id,
+    email: session.user.email!,
+    refresh_token: session.provider_refresh_token,
+    updated_at: new Date().toISOString(),
+  });
+  if (saveError) {
+    console.error("Saving Gmail token failed:", saveError.message);
+    return NextResponse.redirect(new URL("/?error=token_save", url.origin));
   }
   return NextResponse.redirect(new URL("/campaigns", url.origin));
 }

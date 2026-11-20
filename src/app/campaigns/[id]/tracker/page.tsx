@@ -101,7 +101,7 @@ export default function Tracker() {
 
     return (
       <>
-        {look === "paused" && <PausedBanner waiting={waiting} onSignIn={signInWithGoogle} />}
+        {look === "paused" && <PausedBanner waiting={waiting} onSignIn={() => signInWithGoogle({ forceConsent: true })} />}
 
         <section className="flex flex-wrap items-center gap-8">
           <Ring value={sent} total={active.length} done={look === "done"} />

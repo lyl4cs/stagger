@@ -9,12 +9,16 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 
 function SignIn() {
   const router = useRouter();
-  const error = useSearchParams().get("error");
+  const params = useSearchParams();
+  const error = params.get("error");
+  const needsConsent = params.get("consent") === "1";
 
   useEffect(() => {
+    // First sign-in (or no saved Gmail access yet): go straight to Google's permission screen.
+    if (needsConsent) { signInWithGoogle({ forceConsent: true }); return; }
     if (error) return; // stay here so the error is visible
     supabaseBrowser().auth.getUser().then(({ data }) => { if (data.user) router.replace("/campaigns"); });
-  }, [router, error]);
+  }, [router, error, needsConsent]);
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-12">
@@ -35,7 +39,7 @@ function SignIn() {
           <h1 className="m-0 text-[40px] font-semibold tracking-[-0.03em]">Stagger</h1>
           <p className="m-0 text-lg leading-[1.45] text-muted">One email, personalized for everyone, sent from your Gmail.</p>
         </div>
-        <button onClick={signInWithGoogle} className="btn-primary !h-14 w-full">
+        <button onClick={() => signInWithGoogle({ forceConsent: needsConsent })} className="btn-primary !h-14 w-full">
           <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
             <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.2l7.9 6.2C12.5 13.6 17.8 9.5 24 9.5z" />
             <path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.8c4.3-4 6.9-9.9 6.9-17.2z" />
@@ -44,6 +48,7 @@ function SignIn() {
           </svg>
           Sign in with Google
         </button>
+        {needsConsent && <p className="m-0 text-sm text-muted">One more step: approve Gmail access so Stagger can send for you.</p>}
         {error && (
           <p className="m-0 text-sm text-coral-ink">
             {error === "token_save" ? "Signed in, but couldn't save Gmail access. Try again in a minute."

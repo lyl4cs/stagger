@@ -213,7 +213,7 @@ export default function CampaignEditor() {
           <CampaignPill look={look} large />
         </div>
 
-        {campaign.status === "needs_reauth" && <PausedBanner waiting={toSend.length} onSignIn={signInWithGoogle} />}
+        {campaign.status === "needs_reauth" && <PausedBanner waiting={toSend.length} onSignIn={() => signInWithGoogle({ forceConsent: true })} />}
 
         {/* STEP 1: Contacts */}
         <Card>

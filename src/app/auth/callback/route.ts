@@ -14,11 +14,15 @@ export async function GET(req: NextRequest) {
   if (error || !data.session) return NextResponse.redirect(new URL("/?error=auth", url.origin));
 
   const { session } = data;
+  const admin = supabaseAdmin();
   if (!session.provider_refresh_token) {
-    // Google only returns a refresh token when the consent screen is shown; without one we can't send later.
-    return NextResponse.redirect(new URL("/?error=no_refresh_token", url.origin));
+    // Normal sign-ins skip Google's permission screen, so no new refresh token comes back.
+    // That's fine if we already have one; otherwise send them through the permission screen once.
+    const { data: existing } = await admin.from("gmail_tokens").select("user_id").eq("user_id", session.user.id).maybeSingle();
+    if (existing) return NextResponse.redirect(new URL("/campaigns", url.origin));
+    return NextResponse.redirect(new URL("/?consent=1", url.origin));
   }
-  const { error: saveError } = await supabaseAdmin().from("gmail_tokens").upsert({
+  const { error: saveError } = await admin.from("gmail_tokens").upsert({
     user_id: session.user.id,
     email: session.user.email!,
     refresh_token: session.provider_refresh_token,

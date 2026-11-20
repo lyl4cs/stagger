@@ -33,7 +33,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/campaigns/[id]/
 
     try {
       const access = await getAccessToken(token.refresh_token);
-      await sendGmail(access, buildRawMessage({
+      await sendGmail(access, buildRawMessage({ // no tracking pixel on tests
         fromName: c.sender_name || undefined, fromEmail: token.email, to: token.email,
         subject: `[TEST] ${render(c.subject, toContact(r))}`, body: render(c.body, toContact(r)), attachment,
       }));

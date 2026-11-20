@@ -1,14 +1,14 @@
 "use client";
 import { supabaseBrowser } from "./supabase/client";
 
-// gmail.send lets the app send as you but not read your inbox.
+// gmail.send: send as you. gmail.metadata: read headers (who replied, bounces), never bodies.
 // access_type=offline + prompt=consent make Google return a refresh token every time.
 export async function signInWithGoogle() {
   await supabaseBrowser().auth.signInWithOAuth({
     provider: "google",
     options: {
       redirectTo: `${window.location.origin}/auth/callback`,
-      scopes: "https://www.googleapis.com/auth/gmail.send",
+      scopes: "https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.metadata",
       queryParams: { access_type: "offline", prompt: "consent" },
     },
   });

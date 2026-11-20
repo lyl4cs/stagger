@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { processDue } from "@/lib/sender";
+import { processDue, sweepReplies } from "@/lib/sender";
 
 export const maxDuration = 60;
 
@@ -8,8 +8,10 @@ async function run(req: Request) {
   if (req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
-  const result = await processDue(supabaseAdmin());
-  return Response.json(result);
+  const db = supabaseAdmin();
+  const sending = await processDue(db);
+  const tracking = await sweepReplies(db);
+  return Response.json({ sending, tracking });
 }
 
 export const GET = run;

@@ -2,7 +2,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildRawMessage, type Attachment } from "./mime";
 import { render } from "./template";
-import { getAccessToken, sendGmail, ReauthError, RetryableError } from "./gmail";
+import { getAccessToken, sendGmail, getThreadMessages, ReauthError, RetryableError } from "./gmail";
+import { classifyThread } from "./replies";
 import { toContact, type Campaign, type Recipient } from "./types";
 
 const STALE_MINUTES = 10;
@@ -62,10 +63,11 @@ export async function processDue(db: SupabaseClient, limit = 10) {
         subject: render(c.subject, contact),
         body: render(c.body, contact),
         attachment: attachments.get(c.id),
+        trackingPixelUrl: c.track_opens ? pixelUrl(r.id) : undefined,
       });
-      const messageId = await sendGmail(access, raw);
+      const { id: messageId, threadId } = await sendGmail(access, raw);
       await db.from("recipients")
-        .update({ status: "sent", sent_at: new Date().toISOString(), gmail_message_id: messageId, error: null })
+        .update({ status: "sent", sent_at: new Date().toISOString(), gmail_message_id: messageId, thread_id: threadId, error: null })
         .eq("id", r.id);
       sent++;
     } catch (e) {
@@ -88,6 +90,65 @@ export async function processDue(db: SupabaseClient, limit = 10) {
 
   for (const c of campaigns.values()) await finishIfDone(db, c, tokens.get(c.user_id), accessTokens.get(c.user_id));
   return { sent, failed };
+}
+
+export function appUrl(): string | undefined {
+  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, "");
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  return undefined;
+}
+
+function pixelUrl(recipientId: string): string | undefined {
+  const base = appUrl();
+  return base ? `${base}/api/o/${recipientId}` : undefined;
+}
+
+/**
+ * Checks sent emails' Gmail threads for replies and bounces (headers only).
+ * Each email is rechecked at most every 10 minutes, for 30 days after sending.
+ */
+export async function sweepReplies(db: SupabaseClient, limit = 25) {
+  const now = Date.now();
+  const { data } = await db.from("recipients")
+    .select("id,user_id,thread_id,sent_at,campaign_id")
+    .eq("status", "sent").is("replied_at", null).not("thread_id", "is", null)
+    .gt("sent_at", new Date(now - 30 * 86_400_000).toISOString())
+    .or(`reply_checked_at.is.null,reply_checked_at.lt.${new Date(now - 10 * 60_000).toISOString()}`)
+    .order("reply_checked_at", { ascending: true, nullsFirst: true })
+    .limit(limit);
+  const rows = (data ?? []) as Pick<Recipient, "id" | "user_id" | "thread_id" | "sent_at" | "campaign_id">[];
+  if (!rows.length) return { checked: 0, replies: 0, bounces: 0 };
+
+  const userIds = [...new Set(rows.map((r) => r.user_id))];
+  const { data: tokenRows } = await db.from("gmail_tokens").select("*").in("user_id", userIds);
+  const tokens = new Map(((tokenRows ?? []) as Token[]).map((t) => [t.user_id, t]));
+  const access = new Map<string, string | null>();
+  let replies = 0, bounces = 0;
+
+  for (const r of rows) {
+    const token = tokens.get(r.user_id);
+    if (!token) continue;
+    if (!access.has(r.user_id)) {
+      try { access.set(r.user_id, await getAccessToken(token.refresh_token)); }
+      catch { access.set(r.user_id, null); }
+    }
+    const at = access.get(r.user_id);
+    if (!at) continue;
+
+    try {
+      const messages = await getThreadMessages(at, r.thread_id!);
+      const v = classifyThread(messages, token.email, new Date(r.sent_at!).getTime());
+      const patch: Record<string, unknown> = { reply_checked_at: new Date().toISOString() };
+      if (v.kind === "replied") { patch.replied_at = v.at.toISOString(); replies++; }
+      if (v.kind === "bounced") { patch.status = "error"; patch.error = "Bounced: Gmail couldn't deliver to this address."; bounces++; }
+      await db.from("recipients").update(patch).eq("id", r.id);
+    } catch (e) {
+      // Missing metadata permission (signed in before v0.2) or a deleted thread: stop retrying this row for a while.
+      await db.from("recipients").update({ reply_checked_at: new Date().toISOString() }).eq("id", r.id);
+      if (e instanceof ReauthError) access.set(r.user_id, null);
+    }
+  }
+  return { checked: rows.length, replies, bounces };
 }
 
 async function loadAttachment(db: SupabaseClient, c: Campaign): Promise<Attachment | undefined> {

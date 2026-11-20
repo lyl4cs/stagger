@@ -21,7 +21,7 @@ export function isEmail(s: string): boolean {
 export function parseContacts(text: string): Contact[] {
   const firstLine = text.trim().split(/\r?\n/)[0] ?? "";
   const looksLikeCsv = /email/i.test(firstLine) && /[,\t]/.test(firstLine);
-  const contacts = looksLikeCsv ? parseCsv(text) : parseRawPaste(text);
+  const contacts = looksLikeCsv ? parseCsv(text) : isPlainList(text) ? parsePlainList(text) : parseRawPaste(text);
   return dedupe(contacts);
 }
 
@@ -47,6 +47,28 @@ const PERSONAL_DOMAINS = new Set(["gmail", "yahoo", "outlook", "hotmail", "iclou
 function companyFromDomain(email: string): string {
   const label = email.split("@")[1]?.split(".")[0] ?? "";
   return PERSONAL_DOMAINS.has(label) ? "" : cap(label);
+}
+
+/* ---------- Plain list: "a@x.com, b@y.com" or "Mary Yu <mary@x.com>; ..." ---------- */
+
+const LIST_ITEM_RE = /(?:"?([^"<>,;\n]*?)"?\s*<([^<>\s]+@[^<>\s]+)>)|([\w.+'-]+@[\w-]+(?:\.[\w-]+)+)/g;
+
+function isPlainList(text: string): boolean {
+  if (!text.includes("@")) return false;
+  // Plain if nothing is left once emails, "Name <email>" pairs and separators are removed.
+  return text.replace(LIST_ITEM_RE, "").replace(/[\s,;]+/g, "") === "";
+}
+
+export function parsePlainList(text: string): Contact[] {
+  const out: Contact[] = [];
+  for (const m of text.matchAll(LIST_ITEM_RE)) {
+    const email = (m[2] ?? m[3]).toLowerCase();
+    if (!isEmail(email)) continue;
+    const name = (m[1] ?? "").trim();
+    const [firstName, lastName] = name ? [name.split(/\s+/)[0], name.split(/\s+/).slice(1).join(" ")] : nameFromEmail(email);
+    out.push({ firstName, lastName, email, title: "", company: companyFromDomain(email), location: "", customLine: "" });
+  }
+  return out;
 }
 
 /* ---------- Raw paste (Apollo-style blocks) ---------- */

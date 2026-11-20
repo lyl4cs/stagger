@@ -36,6 +36,23 @@ describe("parseContacts: CSV", () => {
   });
 });
 
+describe("parseContacts: plain lists", () => {
+  it("handles comma, semicolon and newline separated emails", () => {
+    const list = parseContacts("ana.lee@acme.io, bo@gmail.com; cy.ng@stripe.com\nzed@acme.io");
+    expect(list.map((c) => c.email)).toEqual(["ana.lee@acme.io", "bo@gmail.com", "cy.ng@stripe.com", "zed@acme.io"]);
+    expect(list[0]).toMatchObject({ firstName: "Ana", lastName: "Lee", company: "Acme" });
+    expect(list[1].company).toBe("");
+  });
+  it("keeps names from Name <email> pairs", () => {
+    const list = parseContacts('Mary Yu <mary.yu@co.com>, "Bo Chen" <bo@co.com>');
+    expect(list[0]).toMatchObject({ firstName: "Mary", lastName: "Yu", email: "mary.yu@co.com" });
+    expect(list[1]).toMatchObject({ firstName: "Bo", lastName: "Chen" });
+  });
+  it("still treats an Apollo block as an Apollo block", () => {
+    expect(parseContacts(paste)[1].title).toBe("Senior Recruiter");
+  });
+});
+
 describe("template", () => {
   const body = "Hi {{FirstName}},\n\nIntro.\n\n{{CustomLine}}\n\nBye";
   it("fills placeholders and drops an empty custom line cleanly", () => {

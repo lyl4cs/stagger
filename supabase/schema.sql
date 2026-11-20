@@ -112,3 +112,32 @@ create policy "own attachments update" on storage.objects for update
 drop policy if exists "own attachments delete" on storage.objects;
 create policy "own attachments delete" on storage.objects for delete
   using (bucket_id = 'attachments' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- ---------------------------------------------------------------------------
+-- v0.2: tracking. Safe to re-run; also works on a database set up with v0.1.
+-- ---------------------------------------------------------------------------
+alter table public.campaigns add column if not exists attachment_size int;
+alter table public.campaigns add column if not exists track_opens boolean not null default true;
+
+alter table public.recipients add column if not exists thread_id text;
+alter table public.recipients add column if not exists opened_at timestamptz;
+alter table public.recipients add column if not exists open_count int not null default 0;
+alter table public.recipients add column if not exists replied_at timestamptz;
+alter table public.recipients add column if not exists reply_checked_at timestamptz;
+
+create index if not exists recipients_reply_sweep_idx on public.recipients (status, reply_checked_at)
+  where replied_at is null;
+
+-- Called by the open-tracking pixel. Records the first open and counts the rest.
+-- Ignores hits in the first 20 seconds after sending, which are mostly spam scanners.
+create or replace function public.record_open(rid uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.recipients
+  set opened_at = coalesce(opened_at, now()), open_count = open_count + 1
+  where id = rid and status = 'sent' and sent_at < now() - interval '20 seconds';
+$$;
+revoke execute on function public.record_open(uuid) from public, anon, authenticated;

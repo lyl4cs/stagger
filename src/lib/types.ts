@@ -13,6 +13,8 @@ export type Campaign = {
   gap_minutes: number;
   attachment_path: string | null;
   attachment_name: string | null;
+  attachment_size: number | null;
+  track_opens: boolean;
   status: CampaignStatus;
   start_at: string | null;
   created_at: string;
@@ -38,6 +40,11 @@ export type Recipient = {
   attempts: number;
   error: string | null;
   gmail_message_id: string | null;
+  thread_id: string | null;
+  opened_at: string | null;
+  open_count: number;
+  replied_at: string | null;
+  reply_checked_at: string | null;
 };
 
 export function toContact(r: Recipient): Contact {

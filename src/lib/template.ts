@@ -55,3 +55,34 @@ export function templateProblems(
   if (contacts.length === 0) problems.push("No contacts to send to.");
   return problems;
 }
+
+const label = (key: string) => key.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+
+/** Problems with the template itself, independent of who it goes to. */
+export function globalProblems(subject: string, body: string): string[] {
+  const problems: string[] = [];
+  if (!subject.trim()) problems.push("The email has no subject.");
+  if (!body.trim()) problems.push("The email body is empty.");
+  const brackets = `${subject}\n${body}`.match(/\[[^\]\n]{2,80}\]/g);
+  if (brackets) problems.push(`${[...new Set(brackets)].join(", ")} is still in the email.`);
+  const used = [...`${subject}\n${body}`.matchAll(TOKEN_RE)].map((m) => m[1]);
+  const unknown = [...new Set(used.filter((k) => !PLACEHOLDERS[k]))];
+  if (unknown.length) problems.push(`${unknown.map((k) => `{{${k}}}`).join(", ")} isn't a placeholder this app knows.`);
+  return problems;
+}
+
+/** Problems for one person: placeholders the template uses that are blank for them. */
+export function personProblems(c: Partial<Contact>, subject: string, body: string): string[] {
+  const used = new Set([...`${subject}\n${body}`.matchAll(TOKEN_RE)].map((m) => m[1]));
+  const who = String(c.firstName || c.email || "this person");
+  const out: string[] = [];
+  for (const key of used) {
+    const field = PLACEHOLDERS[key];
+    if (!field || field === "customLine") continue;
+    if (!String(c[field] ?? "").trim()) {
+      const where = subject.includes(`{{${key}}}`) ? "The subject and body will read wrong." : "A sentence will read wrong.";
+      out.push(`No ${label(key)} for ${who}. ${where}`);
+    }
+  }
+  return out;
+}

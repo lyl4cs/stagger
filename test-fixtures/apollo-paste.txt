@@ -1,0 +1,113 @@
+jane.doe@acme.com
+Request phone number
++1
+
+Click to run
+
+Click to run
+
+
+
+
+
+
+Sunnyvale, California
+9,400
+
+Information Technology & Services
+Computer Software
+
+cloud
++159
+
+
+S
+Sam Rivera
+Senior Recruiter
+
+
+Acme
+sam.rivera@acme.com
+Request phone number
++1
+
+Click to run
+
+Click to run
+
+
+
+
+
+
+Chicago, Illinois
+9,400
+
+Information Technology & Services
+Computer Software
+
+data warehousing
+cloud
++159
+
+
+P
+Pat Kim
+Senior Recruiter | FDE
+
+
+Acme
+pat.kim@acme.com
+Request phone number
++1
+
+Click to run
+
+Click to run
+
+
+
+
+
+
+Indianapolis, Indiana
+9,400
+
+Information Technology & Services
+Computer Software
+
+data warehousing
+cloud
++159
+
+
+L
+Lee Ortiz
+Recruiter
+
+
+Acme
+lee.ortiz@acme.com
+Request phone number
++1
+
+Click to run
+
+Click to run
+
+
+
+
+
+
+United States
+9,400
+
+Information Technology & Services
+Computer Software
+
+data warehousing
+cloud
++159
+
+Add a row

@@ -59,6 +59,12 @@ create index if not exists recipients_campaign_idx on public.recipients (campaig
 alter table public.campaigns enable row level security;
 alter table public.recipients enable row level security;
 
+-- Newer Supabase projects don't grant table access to API roles automatically.
+-- Row Level Security still limits signed-in users to their own rows.
+grant usage on schema public to service_role, authenticated;
+grant all on table public.gmail_tokens, public.campaigns, public.recipients to service_role;
+grant select, insert, update, delete on table public.campaigns, public.recipients to authenticated;
+
 drop policy if exists "own campaigns" on public.campaigns;
 create policy "own campaigns" on public.campaigns
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());

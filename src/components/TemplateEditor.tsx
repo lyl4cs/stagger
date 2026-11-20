@@ -2,6 +2,16 @@
 import { useRef } from "react";
 import { PLACEHOLDERS } from "@/lib/template";
 
+// Friendly names for the insert buttons. The text inserted is still the {{Placeholder}}.
+const CHIP_LABELS: Record<string, string> = {
+  FirstName: "First name",
+  LastName: "Last name",
+  Title: "Job title",
+  Company: "Company",
+  Location: "City",
+  CustomLine: "Custom line",
+};
+
 const SPLIT_RE = /(\{\{\s*\w+\s*\}\}|\[[^\]\n]{2,80}\])/g;
 
 function Highlighted({ text }: { text: string }) {
@@ -46,9 +56,11 @@ export function TemplateEditor({ value, onChange, onCommit, disabled }: {
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-[15px] text-muted">Insert</span>
+        <span className="mr-1 text-[15px] text-muted">Personalize</span>
         {Object.keys(PLACEHOLDERS).filter((k) => k !== "Email").map((k) => (
-          <button key={k} type="button" className="chip" disabled={disabled} onClick={() => insert(`{{${k}}}`)}>{`{{${k}}}`}</button>
+          <button key={k} type="button" className="chip" disabled={disabled} title={`Inserts {{${k}}}`} onClick={() => insert(`{{${k}}}`)}>
+            <span aria-hidden className="chip-plus">+</span>{CHIP_LABELS[k] ?? k}
+          </button>
         ))}
       </div>
       <div className="hl-wrap">

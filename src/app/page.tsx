@@ -52,7 +52,9 @@ function SignIn() {
         {error && (
           <p className="m-0 text-sm text-coral-ink">
             {error === "token_save" ? "Signed in, but couldn't save Gmail access. Try again in a minute."
-              : error === "no_refresh_token" ? "Google didn't grant offline access. Sign in again and approve every permission."
+              : error === "missing_scope" ? "Stagger needs permission to send email. Sign in again and leave both boxes checked."
+              : error === "google_denied" ? "Sign-in was cancelled."
+              : error === "state" ? "Sign-in expired. Try again."
               : "Sign-in didn't finish. Try again."}
           </p>
         )}

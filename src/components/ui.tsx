@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Posty } from "./Posty";
 import { Check, Clock, Pause, X, Alert } from "./icons";
 import { signOut } from "@/lib/auth-client";
@@ -225,7 +226,9 @@ export function ConfirmDialog({ title, children, confirmLabel, cancelLabel = "Ca
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-  return (
+  // Rendered into <body> through a portal. A transformed ancestor (like a card lifting on hover)
+  // turns "fixed" into "relative to that ancestor", which squeezed this dialog into the trash button.
+  return createPortal(
     <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-6" onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-labelledby="dlg-title" onClick={(e) => e.stopPropagation()}
         className="flex w-full max-w-[420px] flex-col gap-5 rounded-2xl border border-[#2e2e2e] bg-card p-7" style={{ animation: "pop .18s ease-out" }}>
@@ -239,6 +242,7 @@ export function ConfirmDialog({ title, children, confirmLabel, cancelLabel = "Ca
           <button type="button" className={`${danger ? "btn-danger" : "btn-primary"} !h-[46px]`} autoFocus={!danger} disabled={busy} onClick={onConfirm}>{confirmLabel}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

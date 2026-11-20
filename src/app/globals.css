@@ -76,6 +76,22 @@ a:hover { color: var(--mint); }
 }
 .btn-secondary:hover { border-color: #6b6b6b; }
 .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-danger {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  height: 52px; padding: 0 24px; border: 0; border-radius: 14px;
+  background: var(--coral); color: #161616; font-size: 17px; font-weight: 600; cursor: pointer;
+}
+.btn-danger:hover { background: var(--coral-ink); }
+.btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-ghost-danger {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border: 0; border-radius: 10px;
+  background: transparent; color: var(--dim); font-size: 15px; cursor: pointer;
+}
+.btn-ghost-danger:hover, .btn-icon-danger:hover { color: var(--coral-ink); background: rgba(255, 143, 126, 0.1); }
+.btn-icon-danger {
+  display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px;
+  border: 0; border-radius: 9px; background: transparent; color: var(--dim); cursor: pointer;
+}
 .btn-mini {
   height: 32px; padding: 0 10px; border-radius: 9px; background: #1f1f1f; border: 1px solid #2e2e2e;
   color: var(--ink-2); font-size: 13px; cursor: pointer;
@@ -143,7 +159,10 @@ a:hover { color: var(--mint); }
 .fp .ct { font-family: var(--font-geist-mono), monospace; font-size: 12px; opacity: 0.75; }
 .tl:hover { background: #171717; }
 .card-link { transition: border-color 0.15s ease, transform 0.15s ease; }
-.card-link:hover { border-color: #3a3a3a; transform: translateY(-2px); color: var(--ink); }
+.card-link:hover, .card-wrap:hover > .card-link { border-color: #3a3a3a; transform: translateY(-2px); color: var(--ink); }
+/* The delete button sits outside the card link, so it lifts with the card on hover. */
+.card-del { transition: transform 0.15s ease; }
+.card-wrap:hover > .card-del { transform: translateY(-2px); }
 
 /* Skeleton shimmer */
 .sk { background: linear-gradient(90deg, #1c1c1c 0%, #262626 50%, #1c1c1c 100%); background-size: 200% 100%; animation: shimmer 1.6s linear infinite; border-radius: 8px; }

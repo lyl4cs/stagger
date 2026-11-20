@@ -19,3 +19,4 @@ export const Clip = (p: P) => <S {...p} sw={1.5}><path d="M10.5 4.5 5.8 9.2a1.6 
 export const X = (p: P) => <S {...p} sw={1.8}><path d="m4 4 8 8M12 4l-8 8" /></S>;
 export const Alert = (p: P) => <S {...p} sw={1.6}><circle cx="8" cy="8" r="6.5" /><path d="M8 4.5v4.2M8 11.2v.1" /></S>;
 export const Pencil = (p: P) => <S {...p} sw={1.5}><path d="M11 2.5 13.5 5 6 12.5 3 13l.5-3z" /></S>;
+export const Trash = (p: P) => <S {...p} sw={1.5}><path d="M2.5 4.5h11M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5M4 4.5l.7 8.6a1 1 0 0 0 1 .9h4.6a1 1 0 0 0 1-.9L12 4.5" /></S>;

@@ -10,11 +10,12 @@ import { globalProblems, personProblems } from "@/lib/template";
 import { fromContact, toContact, type Campaign, type Recipient } from "@/lib/types";
 import { campaignLook, personLook, nextSendAt, fmtWhen, fmtBytes } from "@/lib/view";
 import {
-  Header, BackLink, CampaignPill, PersonPill, Ring, Toast, OkBanner, PausedBanner, StepHeader, Card, type ToastMsg,
+  Header, BackLink, CampaignPill, PersonPill, Ring, Toast, OkBanner, PausedBanner, StepHeader, Card, ConfirmDialog, type ToastMsg,
 } from "@/components/ui";
 import { TemplateEditor } from "@/components/TemplateEditor";
 import { EmailPreview } from "@/components/EmailPreview";
 import { Posty } from "@/components/Posty";
+import { DeleteCampaign } from "@/components/DeleteCampaign";
 import { ChevL, ChevR, Clip, X, Minus, Plus, Alert, Check, ArrowRight, Pencil } from "@/components/icons";
 
 const COLLAPSED_ROWS = 8;
@@ -447,21 +448,22 @@ export default function CampaignEditor() {
             </div>
           )}
         </Card>
+        <div className="flex justify-end">
+          <DeleteCampaign id={campaign.id} name={campaign.name} variant="text"
+            queued={(recipients ?? []).filter((r) => r.status === "queued" || r.status === "sending").length}
+            onDeleted={() => router.replace("/campaigns")} />
+        </div>
       </main>
 
       {confirming && (
-        <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-6" onClick={() => setConfirming(false)}>
-          <div role="dialog" aria-modal="true" aria-labelledby="cft" onClick={(e) => e.stopPropagation()}
-            className="flex w-full max-w-[420px] flex-col gap-5 rounded-2xl border border-[#2e2e2e] bg-card p-7" style={{ animation: "pop .18s ease-out" }}>
-            <Posty mood="stand" width={56} ink="#161616" />
-            <h3 id="cft" className="m-0 text-[22px] font-medium leading-[1.35]">Send {toSend.length} email{toSend.length === 1 ? "" : "s"} starting {fmtWhen(start)}?</h3>
-            <p className="m-0 text-[15px] leading-normal text-muted">One every {campaign.gap_minutes} min from your Gmail. You can cancel the rest any time.</p>
-            <div className="flex justify-end gap-2.5">
-              <button type="button" className="btn-secondary !h-[46px]" onClick={() => setConfirming(false)}>Not yet</button>
-              <button type="button" className="btn-primary !h-[46px]" autoFocus onClick={schedule}>Schedule</button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          top={<Posty mood="stand" width={56} ink="#161616" />}
+          title={`Send ${toSend.length} email${toSend.length === 1 ? "" : "s"} starting ${fmtWhen(start)}?`}
+          confirmLabel="Schedule" cancelLabel="Not yet"
+          onConfirm={schedule} onClose={() => setConfirming(false)}
+        >
+          One every {campaign.gap_minutes} min from your Gmail. You can cancel the rest any time.
+        </ConfirmDialog>
       )}
       <Toast msg={toast} onClose={() => setToast(null)} />
     </>

@@ -8,6 +8,7 @@ import type { Campaign, Recipient } from "@/lib/types";
 import { campaignLook, personLook, nextSendAt, lastSendAt, activity, fmtWhen, type PersonLook } from "@/lib/view";
 import { Header, BackLink, CampaignPill, PersonPill, Ring, Toast, PausedBanner, dotStyle, type ToastMsg } from "@/components/ui";
 import { Pencil } from "@/components/icons";
+import { DeleteCampaign } from "@/components/DeleteCampaign";
 
 type Filter = "all" | "waiting" | "sent" | "opened" | "replied" | "errors";
 const GROUPS: Record<Filter, (l: PersonLook) => boolean> = {
@@ -215,6 +216,11 @@ export default function Tracker() {
           <Link href={`/campaigns/${id}`} className="inline-flex items-center gap-2 text-[15px] text-muted no-underline hover:text-ink"><Pencil />Campaign details</Link>
         </div>
         {body}
+        {campaign && rows && <div className="flex justify-end">
+          <DeleteCampaign id={campaign.id} name={campaign.name} variant="text"
+            queued={rows.filter((r) => r.status === "queued" || r.status === "sending").length}
+            onDeleted={() => router.replace("/campaigns")} />
+        </div>}
       </main>
       <Toast msg={toast} onClose={() => setToast(null)} />
     </>

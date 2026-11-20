@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { Header, CampaignPill, ProgressBar, CounterTile, Toast, type ToastMsg } from "@/components/ui";
 import { Posty } from "@/components/Posty";
+import { DeleteCampaign } from "@/components/DeleteCampaign";
 import { Plus, Reply, ArrowRight } from "@/components/icons";
 import { campaignLook, counters, nextSendAt, greeting, fmtWhen, type CampaignLook } from "@/lib/view";
 import { personProblems } from "@/lib/template";
@@ -88,7 +89,12 @@ export default function Home() {
                   <span className="mono text-[13px] text-dim">{String(rows.length).padStart(2, "0")}</span>
                 </div>
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
-                  {rows.map((r) => <CampaignCard key={r.id} c={r} now={now} />)}
+                  {rows.map((r) => (
+                    <CampaignCard key={r.id} c={r} now={now} onDeleted={() => {
+                      setRows((list) => list?.filter((x) => x.id !== r.id) ?? null);
+                      setToast({ kind: "ok", text: `Deleted "${r.name}".` });
+                    }} />
+                  ))}
                 </div>
               </section>
             )}
@@ -100,7 +106,7 @@ export default function Home() {
   );
 }
 
-function CampaignCard({ c, now }: { c: Row; now: Date }) {
+function CampaignCard({ c, now, onDeleted }: { c: Row; now: Date; onDeleted: () => void }) {
   const look: CampaignLook = campaignLook(c, now.getTime());
   const rs = c.recipients;
   const active = rs.filter((r) => r.status !== "skipped");
@@ -117,7 +123,12 @@ function CampaignCard({ c, now }: { c: Row; now: Date }) {
     : "Ready to schedule";
   const href = look === "draft" ? `/campaigns/${c.id}` : `/campaigns/${c.id}/tracker`;
 
+  const queued = rs.filter((r) => r.status === "queued" || r.status === "sending").length;
+
+  // The delete button sits on top of the card but outside the link: a button nested in a
+  // link is invalid HTML and clicking it would also open the campaign.
   return (
+    <div className="card-wrap relative">
     <Link href={href} className="card-link flex flex-col gap-5 rounded-2xl border border-line bg-card p-6 no-underline">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
@@ -148,6 +159,10 @@ function CampaignCard({ c, now }: { c: Row; now: Date }) {
         <span className="text-muted"><ArrowRight /></span>
       </div>
     </Link>
+    <div className="card-del absolute bottom-[17px] right-[50px]">
+      <DeleteCampaign id={c.id} name={c.name} queued={queued} variant="icon" onDeleted={onDeleted} />
+    </div>
+    </div>
   );
 }
 

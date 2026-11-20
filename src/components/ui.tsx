@@ -212,3 +212,33 @@ export function StepHeader({ n, title, sub, right }: { n: number; title: string;
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <section className={`flex flex-col gap-6 rounded-2xl border border-line bg-surface p-6 sm:p-8 ${className}`}>{children}</section>;
 }
+
+/* ---------- Confirm dialog ---------- */
+
+export function ConfirmDialog({ title, children, confirmLabel, cancelLabel = "Cancel", danger, busy, error, top, onConfirm, onClose }: {
+  title: string; children: React.ReactNode; confirmLabel: string; cancelLabel?: string;
+  danger?: boolean; busy?: boolean; error?: string | null; top?: React.ReactNode;
+  onConfirm: () => void; onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return (
+    <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-6" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-labelledby="dlg-title" onClick={(e) => e.stopPropagation()}
+        className="flex w-full max-w-[420px] flex-col gap-5 rounded-2xl border border-[#2e2e2e] bg-card p-7" style={{ animation: "pop .18s ease-out" }}>
+        {top}
+        <h3 id="dlg-title" className="m-0 break-words text-[22px] font-medium leading-[1.35]">{title}</h3>
+        <p className="m-0 text-[15px] leading-normal text-muted">{children}</p>
+        {error && <p role="alert" className="m-0 text-sm text-coral-ink">{error}</p>}
+        <div className="flex justify-end gap-2.5">
+          <button type="button" className="btn-secondary !h-[46px]" disabled={busy} onClick={onClose}>{cancelLabel}</button>
+          {/* Danger actions don't take focus by default, so a stray Enter can't delete anything. */}
+          <button type="button" className={`${danger ? "btn-danger" : "btn-primary"} !h-[46px]`} autoFocus={!danger} disabled={busy} onClick={onConfirm}>{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  );
+}

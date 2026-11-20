@@ -53,8 +53,8 @@ You need free accounts on Supabase, Google Cloud and Vercel. It takes about 20 m
 ### 3. Connect Google to Supabase
 1. In Supabase, go to **Authentication > Providers > Google**. Enable it and paste the client ID and secret.
 2. Go to **Authentication > URL Configuration**:
-   - Site URL: your production URL, e.g. `https://outreach-xyz.vercel.app`
-   - Redirect URLs: add `https://outreach-xyz.vercel.app/auth/callback` and `http://localhost:3000/auth/callback`
+   - Site URL: your production URL, e.g. `https://stagger-xyz.vercel.app`
+   - Redirect URLs: add `https://stagger-xyz.vercel.app/auth/callback` and `http://localhost:3000/auth/callback`
 
 ### 4. Deploy
 1. Import this repo into Vercel.

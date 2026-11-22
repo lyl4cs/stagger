@@ -52,7 +52,7 @@ function SignIn() {
         {error && (
           <p className="m-0 text-sm text-coral-ink">
             {error === "token_save" ? "Signed in, but couldn't save Gmail access. Try again in a minute."
-              : error === "missing_scope" ? "Stagger needs permission to send email. Sign in again and leave both boxes checked."
+              : error === "missing_scope" ? "Stagger needs permission to send email. Sign in again and leave that box checked."
               : error === "google_denied" ? "Sign-in was cancelled."
               : error === "state" ? "Sign-in expired. Try again."
               : "Sign-in didn't finish. Try again."}
@@ -60,7 +60,7 @@ function SignIn() {
         )}
         <div className="flex items-center gap-2.5 text-sm text-muted">
           <Lock size={16} />
-          <span>Sends as you and spots replies. Never reads what anyone wrote.</span>
+          <span>Sends from your Gmail. Can&apos;t read your inbox.</span>
         </div>
         <span className="mono text-xs tracking-[0.04em] text-dim">[ v0.2 &nbsp;/&nbsp; FOR PERSONAL SENDING ]</span>
       </div>

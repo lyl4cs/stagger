@@ -10,8 +10,10 @@ export async function GET(req: NextRequest) {
   const go = (path: string) => {
     const res = NextResponse.redirect(new URL(path, url.origin));
     res.cookies.delete("g_oauth_state");
+    res.cookies.delete("g_oauth_next");
     return res;
   };
+  const next = req.cookies.get("g_oauth_next")?.value ?? "/campaigns";
 
   if (url.searchParams.get("error")) return go("/?error=google_denied");
   const code = url.searchParams.get("code");
@@ -50,11 +52,14 @@ export async function GET(req: NextRequest) {
   }
 
   const admin = supabaseAdmin();
+  // Google's answer lists every permission this grant now covers, so it is the source of truth.
+  const scopes = String(tokens.scope ?? "");
   if (tokens.refresh_token) {
     const { error: saveError } = await admin.from("gmail_tokens").upsert({
       user_id: data.user.id,
       email: data.user.email!,
       refresh_token: tokens.refresh_token,
+      scopes,
       updated_at: new Date().toISOString(),
     });
     if (saveError) {
@@ -64,8 +69,9 @@ export async function GET(req: NextRequest) {
   } else {
     // Normal sign-ins skip Google's permission screen, so no new refresh token comes back.
     // Fine if one is saved already; otherwise go through the permission screen once.
-    const { data: existing } = await admin.from("gmail_tokens").select("user_id").eq("user_id", data.user.id).maybeSingle();
+    const { data: existing } = await admin.from("gmail_tokens").update({ scopes, updated_at: new Date().toISOString() })
+      .eq("user_id", data.user.id).select("user_id").maybeSingle();
     if (!existing) return go("/?consent=1");
   }
-  return go("/campaigns");
+  return go(next.startsWith("/settings") ? "/settings?from=google" : next.startsWith("/") && !next.startsWith("//") ? next : "/campaigns");
 }

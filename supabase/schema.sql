@@ -11,6 +11,12 @@ create table if not exists public.gmail_tokens (
   updated_at timestamptz not null default now()
 );
 alter table public.gmail_tokens enable row level security;
+-- v0.3: the Google permissions each user granted (space-separated). Reply tracking needs
+-- gmail.metadata and is opt-in. Rows from before v0.3 were granted both, so backfill that.
+alter table public.gmail_tokens add column if not exists scopes text;
+update public.gmail_tokens
+  set scopes = 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.metadata'
+  where scopes is null;
 
 create table if not exists public.campaigns (
   id uuid primary key default gen_random_uuid(),

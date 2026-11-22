@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildRawMessage, type Attachment } from "./mime";
 import { render } from "./template";
-import { getAccessToken, sendGmail, getThreadMessages, ReauthError, RetryableError } from "./gmail";
+import { getAccessToken, sendGmail, getThreadMessages, hasReplyTracking, ReauthError, RetryableError } from "./gmail";
 import { classifyThread } from "./replies";
 import { toContact, type Campaign, type Recipient } from "./types";
 
@@ -10,7 +10,7 @@ const STALE_MINUTES = 10;
 const MAX_ATTEMPTS = 3;
 const RETRY_DELAY_MINUTES = 5;
 
-type Token = { user_id: string; email: string; refresh_token: string };
+type Token = { user_id: string; email: string; refresh_token: string; scopes: string | null };
 
 /** Called once a minute by the cron job. Sends every email that is due, up to `limit`. */
 export async function processDue(db: SupabaseClient, limit = 10) {
@@ -109,19 +109,22 @@ function pixelUrl(recipientId: string): string | undefined {
  */
 export async function sweepReplies(db: SupabaseClient, limit = 25) {
   const now = Date.now();
+  // Only people who turned reply tracking on granted the headers permission.
+  const { data: tokenRows } = await db.from("gmail_tokens").select("*").like("scopes", "%gmail.metadata%");
+  const tokens = new Map(((tokenRows ?? []) as Token[]).filter((t) => hasReplyTracking(t.scopes)).map((t) => [t.user_id, t]));
+  if (!tokens.size) return { checked: 0, replies: 0, bounces: 0 };
+
   const { data } = await db.from("recipients")
     .select("id,user_id,thread_id,sent_at,campaign_id")
     .eq("status", "sent").is("replied_at", null).not("thread_id", "is", null)
     .gt("sent_at", new Date(now - 30 * 86_400_000).toISOString())
     .or(`reply_checked_at.is.null,reply_checked_at.lt.${new Date(now - 10 * 60_000).toISOString()}`)
+    .in("user_id", [...tokens.keys()])
     .order("reply_checked_at", { ascending: true, nullsFirst: true })
     .limit(limit);
   const rows = (data ?? []) as Pick<Recipient, "id" | "user_id" | "thread_id" | "sent_at" | "campaign_id">[];
   if (!rows.length) return { checked: 0, replies: 0, bounces: 0 };
 
-  const userIds = [...new Set(rows.map((r) => r.user_id))];
-  const { data: tokenRows } = await db.from("gmail_tokens").select("*").in("user_id", userIds);
-  const tokens = new Map(((tokenRows ?? []) as Token[]).map((t) => [t.user_id, t]));
   const access = new Map<string, string | null>();
   let replies = 0, bounces = 0;
 
@@ -143,7 +146,7 @@ export async function sweepReplies(db: SupabaseClient, limit = 25) {
       if (v.kind === "bounced") { patch.status = "error"; patch.error = "Bounced: Gmail couldn't deliver to this address."; bounces++; }
       await db.from("recipients").update(patch).eq("id", r.id);
     } catch (e) {
-      // Missing metadata permission (signed in before v0.2) or a deleted thread: stop retrying this row for a while.
+      // Permission withdrawn at Google, or a deleted thread: stop retrying this row for a while.
       await db.from("recipients").update({ reply_checked_at: new Date().toISOString() }).eq("id", r.id);
       if (e instanceof ReauthError) access.set(r.user_id, null);
     }

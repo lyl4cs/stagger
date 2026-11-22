@@ -23,6 +23,7 @@ export function Header({ email }: { email?: string }) {
               <span className="h-2 w-2 rounded-full bg-mint" />
               <span className="mono text-[13px]">{email}</span>
             </div>
+            <Link href="/settings" className="text-sm text-dim no-underline hover:text-ink">Settings</Link>
             <button onClick={signOut} className="text-sm text-dim hover:text-ink">Sign out</button>
           </div>
         )}

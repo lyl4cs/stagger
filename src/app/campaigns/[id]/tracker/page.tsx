@@ -41,6 +41,10 @@ export default function Tracker() {
   const [filter, setFilter] = useState<Filter>("all");
   const [toast, setToast] = useState<ToastMsg>(null);
   const [now, setNow] = useState(() => new Date());
+  const [replyTracking, setReplyTracking] = useState<boolean | null>(null);
+  useEffect(() => {
+    fetch("/api/settings").then((r) => (r.ok ? r.json() : null)).then((j) => j && setReplyTracking(j.replyTracking)).catch(() => {});
+  }, []);
 
   const load = useCallback(async () => {
     const [{ data: c }, { data: r }] = await Promise.all([
@@ -128,7 +132,9 @@ export default function Tracker() {
             </div>
             <div className="brk flex min-w-24 flex-col gap-1.5 px-5 py-3.5" style={{ ["--s" as string]: "10px" }}>
               <span className="mono text-[11px] tracking-[0.06em] text-dim">REPLIED</span>
-              <span className={`text-[30px] font-medium ${replied ? "text-mint" : ""}`}>{replied}</span>
+              {replyTracking === false && !replied
+                ? <Link href="/settings" title="Reply tracking is off. Turn it on in settings." className="text-[30px] font-medium text-dim no-underline hover:text-ink">Off</Link>
+                : <span className={`text-[30px] font-medium ${replied ? "text-mint" : ""}`}>{replied}</span>}
             </div>
           </div>
         </section>

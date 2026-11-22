@@ -6,10 +6,17 @@ export class ReauthError extends Error {}
 // 429 / 5xx from Gmail: worth retrying later.
 export class RetryableError extends Error {}
 
-export const GMAIL_SCOPES = [
-  "https://www.googleapis.com/auth/gmail.send",     // send as the user
-  "https://www.googleapis.com/auth/gmail.metadata", // headers only: who replied, never the body
-];
+export { SEND_SCOPE, HEADERS_SCOPE, hasReplyTracking } from "./scopes";
+
+/** Kills the whole grant at Google (every scope, every token from it). Best effort. */
+export async function revokeGoogleToken(token: string) {
+  const res = await fetch("https://oauth2.googleapis.com/revoke", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ token }),
+  }).catch(() => null);
+  return !!res?.ok;
+}
 
 export async function getAccessToken(refreshToken: string): Promise<string> {
   const res = await fetch("https://oauth2.googleapis.com/token", {
